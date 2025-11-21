@@ -1,0 +1,17 @@
+<VirtualHost *:80>
+    ServerName biblioteca.local
+    DocumentRoot /var/www/biblioteca
+
+    <Directory /var/www/biblioteca>
+        Options Indexes FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    ErrorLog ${APACHE_LOG_DIR}/biblioteca_error.log
+    CustomLog ${APACHE_LOG_DIR}/biblioteca_access.log combined
+
+    ProxyPassMatch "^/(.*\.php)$" "unix:/run/php/php8.4-fpm.sock|fcgi://localhost/var/www/biblioteca/"
+</VirtualHost>
+
+

@@ -1,0 +1,19 @@
+<VirtualHost *:80>
+    ServerName {{ virtualhost_docker.datos.nameserver }}
+    ServerAdmin webmaster@localhost
+
+    DocumentRoot {{ mediawiki_dirs.data }}
+
+    <Directory {{ mediawiki_dirs.data }}>
+        Options Indexes FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    ErrorLog ${APACHE_LOG_DIR}/{{ virtualhost_docker.datos.errorlog }}.log
+    CustomLog ${APACHE_LOG_DIR}/{{ virtualhost_docker.datos.accesslog }}.log combined
+
+    # Redirige tráfico al contenedor MediaWiki
+    ProxyPass / http://127.0.0.1:{{ mediawiki_port }}/
+    ProxyPassReverse / http://127.0.0.1:{{ mediawiki_port }}/
+</VirtualHost>

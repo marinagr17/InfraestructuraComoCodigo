@@ -1,0 +1,15 @@
+<?php
+const base_url = "{{ app_url }}";
+const host = "{{ biblioteca_db_host }}";
+const user = "{{ biblioteca_db_user }}";
+const pass = "{{ biblioteca_db_password }}";
+const db = "{{ biblioteca_db_name }}";
+const charset = "charset=utf8";
+
+$options = [
+    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+    PDO::MYSQL_ATTR_SSL_CA => null  // <--- Desactiva SSL
+];
+?>
+

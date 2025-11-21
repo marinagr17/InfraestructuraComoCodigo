@@ -1,0 +1,80 @@
+#clonar repo
+- name: Clonar la aplicación desde GitHub
+  git:
+    repo: "{{ repo_url }}"
+    dest: "{{ document_root }}"
+    version: master 
+    force: yes
+    update: yes
+  become: true
+
+#permisos
+
+- name: Ajustar permisos de la aplicación
+  file:
+    path: "{{ document_root }}"
+    owner: www-data
+    group: www-data
+    recurse: yes
+    mode: '0755' 
+  become: true
+
+#fallo de ruta
+- name: Reemplazar base_url en la configuración de la Biblioteca
+  replace:
+    path: /var/www/biblioteca/Config/Config.php
+    regexp: 'http://localhost/biblio/'
+    replace: '{{ app_url }}'
+
+#config.php
+- name: Copiar configuración de la aplicación biblioteca
+  template:
+    src: config.php.j2
+    dest: /var/www/biblioteca/Config/Config.php
+    owner: www-data
+    group: www-data
+    mode: '0644'
+
+
+#instalar php-fpm
+- name: Instalar PHP-FPM
+  apt:
+    name:
+      - php8.4-fpm
+      - php8.4-mysql
+      - php8.4-cli
+    state: present
+    update_cache: yes
+
+- name: Asegurar que php-fpm está activo
+  service:
+    name: php8.4-fpm
+    state: started
+    enabled: yes
+
+
+#modulos necesarios
+- name: Habilitar módulos necesarios para PHP-FPM
+  apache2_module:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - proxy
+    - proxy_fcgi
+  notify: restart apache2
+
+
+#virtualhost
+- name: Crear VirtualHost para biblioteca
+  template:
+    src: etc/biblioteca/vhost2.j2
+    dest: /etc/apache2/sites-available/biblioteca.conf
+    owner: root
+    group: root
+    mode: '0644'
+
+#habilitar biblioteca
+- name: Habilitar sitio biblioteca
+  command: a2ensite biblioteca.conf
+  notify: restart apache2
+

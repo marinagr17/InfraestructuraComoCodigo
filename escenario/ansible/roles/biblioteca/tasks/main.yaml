@@ -1,0 +1,62 @@
+##################
+####biblioteca###
+#################
+
+
+# Crear la base de datos como root (más seguro)
+- name: Crear base de datos
+  community.mysql.mysql_db:
+    name: "{{ biblioteca_db_name }}"
+    state: present
+    login_user: root
+    login_password: "{{ root_db_password }}"
+    login_host: localhost
+
+# Crear usuario marina con acceso desde localhost
+- name: Crear usuario marina con acceso desde localhost
+  community.mysql.mysql_user:
+    name: "{{ biblioteca_db_user }}"
+    host: "localhost"
+    password: "{{ biblioteca_db_password }}"
+    priv: "{{ biblioteca_db_name }}.*:ALL"
+    state: present
+    login_user: root
+    login_password: "{{ root_db_password }}"
+    login_host: localhost
+
+# Crear usuario marina con acceso desde el servidor Apache
+- name: Crear usuario marina con acceso remoto desde Apache
+  community.mysql.mysql_user:
+    name: "{{ biblioteca_db_user }}"
+    host: "192.168.201.2"  # IP del servidor Apache
+    password: "{{ biblioteca_db_password }}"
+    priv: "{{ biblioteca_db_name }}.*:ALL"
+    state: present
+    login_user: root
+    login_password: "{{ root_db_password }}"
+    login_host: localhost
+
+# Copiar esquema al servidor MariaDB
+- name: Copiar esquema biblioteca.sql al servidor MariaDB
+  ansible.builtin.copy:
+    src: biblioteca.sql
+    dest: /tmp/biblioteca.sql
+
+# Verificar si ya existen tablas en la base de datos
+- name: Verificar si la base de datos ya tiene tablas
+  community.mysql.mysql_query:
+    login_user: root
+    login_password: "{{ root_db_password }}"
+    login_host: localhost
+    login_db: "{{ biblioteca_db_name }}"
+    query: "SHOW TABLES"
+  register: existing_tables
+  ignore_errors: yes
+
+# Importar el esquema solo si no hay tablas
+- name: Importar biblioteca.sql en la base de datos
+  ansible.builtin.shell: |
+    mysql {{ biblioteca_db_name }} < /tmp/biblioteca.sql
+  become: yes
+  become_user: root
+  when: existing_tables.rowcount[0] == 0

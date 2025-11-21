@@ -1,0 +1,87 @@
+#instalar docker.io
+- name: instalar docker.io
+  apt:
+    pkg:
+      - docker.io
+    state: latest
+    update_cache: yes
+
+#Crear volumenes locales para guardar los datos de la aplicacion
+- name: Crear directorios mediawiki
+  file:
+    path: "/home/debian/Documentos/{{ item }}"
+    state: directory
+    mode: '0755'
+    owner: debian
+    group: debian
+  loop:
+    - mediawiki_data
+    - mediawiki_images
+    - mediawiki_conf
+
+- name: Asignar www-data a los directorios de MediaWiki
+  file:
+    path: "{{ item }}"
+    owner: www-data
+    group: www-data
+    recurse: yes
+  loop:
+    - "{{ mediawiki_dirs.images }}"
+    - "{{ mediawiki_dirs.data }}"
+    - "{{ mediawiki_dirs.conf }}"
+  become: yes
+
+#incluir localseting.php en el directorio  /home/debian/Documentos/mediawiki_conf/
+- name: Copiar LocalSettings.php al contenedor MediaWiki
+  copy:
+    src: LocalSettings.php
+    dest: "/home/debian/Documentos/mediawiki_conf/LocalSettings.php"
+    owner: www-data
+    group: www-data
+    mode: '0644'
+
+#archivos sql a mediawiki_Data
+- name: Copiar archivos SQLite a mediawiki_data
+  copy:
+    src: "{{ item }}"
+    dest: "{{ mediawiki_dirs.data }}/{{ item }}"
+    owner: www-data
+    group: www-data
+    mode: '0640'
+  loop:
+    - my_wiki.sqlite
+    - my_wiki_jobqueue.sqlite
+    - my_wiki_l10n_cache.sqlite
+    - wikicache.sqlite
+  become: yes
+
+
+#Desplegar contenedor:
+- name: Ejecutar contenedor MediaWiki
+  community.docker.docker_container:
+    name: "{{ mediawiki_name }}"
+    image: "{{ mediawiki_image }}"
+    state: started
+    restart_policy: unless-stopped
+    ports:
+      - "{{ mediawiki_port }}:80"
+    volumes:
+      - "{{ mediawiki_dirs.images }}:/var/www/html/images"
+      - "{{ mediawiki_dirs.data }}:/var/www/data"
+      - "{{ mediawiki_dirs.conf }}/LocalSettings.php:/var/www/html/LocalSettings.php:ro"
+
+#Crear virtualhost para el contenedor
+- name: Copiar VirtualHost para MediaWiki
+  template:
+    src: templates/etc/vhost1.j2
+    dest: /etc/apache2/sites-available/mediawiki.conf
+  become: yes
+
+- name: Activar módulos necesarios de Apache
+  command: a2enmod proxy proxy_http
+  become: yes
+
+- name: Activar el sitio MediaWiki
+  command: a2ensite mediawiki.conf
+  become: yes
+
