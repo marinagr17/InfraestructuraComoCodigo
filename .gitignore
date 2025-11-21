@@ -1,0 +1,2 @@
+#ignorar sqlites porque son muy grandes
+escenario/ansible/roles/docker/files/*.sqlite
