@@ -2,8 +2,7 @@
   apt:
     name:
       - apache2
-      - php
-      - libapache2-mod-php
+      - php-fpm
       - php-mysql
       - php-mbstring
       - git

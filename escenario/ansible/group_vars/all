@@ -12,6 +12,8 @@ virtualhosts:
 # Lista con los módulos que hay que activar
 mods_enabled:
   - rewrite
+  - proxy_fcgi
+  - setenvif 
 
 
 # URL del repositorio
