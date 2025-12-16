@@ -1,0 +1,52 @@
+#cloud-config
+hostname: empresa1
+users:
+  - name: debian
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: users, admin
+    shell: /bin/bash
+    ssh-authorized-keys:
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGlvA2THtXwTUPU/p7EnbvJCjz5GUxWtXch7YJPE6x7A marina@debian
+chpasswd:
+  expire: False
+  users:
+    - name: debian
+      password: debian
+      type: text
+# 🔀 Activar forwarding IPv4 (persistente)
+write_files:
+  - path: /etc/sysctl.d/99-ip-forward.conf
+    owner: root:root
+    permissions: "0644"
+    content: |
+      net.ipv4.ip_forward = 1
+
+# ▶️ Aplicar en el primer arranque
+runcmd:
+  - sysctl --system
+
+package_update: true
+packages:
+  - iptables-persistent
+  - openvpn
+  - easy-rsa
+
+# ▶️ Comandos post-instalación
+runcmd:
+  # Aplicar sysctl
+  - sysctl --system
+
+  # Evitar prompts de iptables-persistent (por si acaso)
+  - echo iptables-persistent iptables-persistent/autosave_v4 boolean true | debconf-set-selections
+  - echo iptables-persistent iptables-persistent/autosave_v6 boolean false | debconf-set-selections
+
+  # Crear reglas mínimas (ejemplo NAT)
+  # ens3 = red-externa
+  - iptables -t nat -A POSTROUTING -o ens3 -j MASQUERADE
+
+  # Guardar reglas
+  - iptables-save > /etc/iptables/rules.v4
+
+  # Reiniciar servicio
+  - systemctl restart netfilter-persistent
+

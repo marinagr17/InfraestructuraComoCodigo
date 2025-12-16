@@ -1,7 +1,7 @@
 #cloud-config
-hostname: mariadb
+hostname: cliente1
 users:
-  - name: ubuntu
+  - name: debian
     sudo: ALL=(ALL) NOPASSWD:ALL
     groups: users, admin
     shell: /bin/bash
@@ -10,6 +10,8 @@ users:
 chpasswd:
   expire: False
   users:
-    - name: ubuntu
-      password: asdasd
+    - name: debian
+      password: debian
       type: text
+
+
