@@ -33,9 +33,8 @@ locals {
       bridge    = "br-empresa2"
       autostart = true
     }
-  }
 
-      red-internet = {
+    red-internet = {
       name      = "red-internet"
       mode      = "none" # sin conectividad
       bridge    = "br-internet"
@@ -69,7 +68,7 @@ locals {
       memory     = 1024
       vcpu       = 1
       base_image = "debian13-base.qcow2"
-    
+
       networks = [
         { network_name = "red-externa", wait_for_lease = true },
         { network_name = "red-empresa2" },
@@ -85,7 +84,7 @@ locals {
       memory     = 1024
       vcpu       = 1
       base_image = "debian13-base.qcow2"
-    
+
       networks = [
         { network_name = "red-externa", wait_for_lease = true },
         { network_name = "red-empresa1" }
@@ -94,13 +93,13 @@ locals {
       user_data      = "${path.module}/cloud-init/cliente1/user-data.yaml"
       network_config = "${path.module}/cloud-init/cliente1/network-config.yaml"
     }
-    
+
     cliente2 = {
       name       = "cliente2"
       memory     = 1024
       vcpu       = 1
       base_image = "debian13-base.qcow2"
-    
+
       networks = [
         { network_name = "red-externa", wait_for_lease = true },
         { network_name = "red-empresa2" }
@@ -108,7 +107,6 @@ locals {
 
       user_data      = "${path.module}/cloud-init/cliente2/user-data.yaml"
       network_config = "${path.module}/cloud-init/cliente2/network-config.yaml"
-
     }
   }
-
+}
