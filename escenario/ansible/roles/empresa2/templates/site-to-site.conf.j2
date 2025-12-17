@@ -1,0 +1,31 @@
+tls-server
+port 1194
+proto udp
+dev tun
+
+ca /etc/openvpn/ca.crt
+cert /etc/openvpn/empresa2.crt
+key /etc/openvpn/empresa2.key
+dh /etc/openvpn/dh.pem
+
+tls-crypt /etc/openvpn/ta.key 0
+
+remote-cert-tls client
+
+#server 10.99.99.0 255.255.255.0
+ifconfig 10.99.99.1 10.99.99.2
+
+route 10.50.50.0 255.255.255.0
+
+# Cifrado y autenticación
+cipher AES-256-GCM
+auth SHA256
+
+keepalive 10 120
+persist-key
+persist-tun
+
+user nobody
+group nogroup
+
+verb 3

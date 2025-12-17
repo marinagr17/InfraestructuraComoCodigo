@@ -1,18 +1,10 @@
-- hosts: all
+- hosts: empresa1
   become: true
   roles:
-   - role: commons
+   - empresa1
 
-- hosts: servidores_web
+- hosts: empresa2
   become: true
   roles:
-   - apache2
-   - bibliotecaApache
-   - docker
-
-- hosts: servidores_bd
-  become: true
-  roles:
-   - mariadb
-   - biblioteca
+   - empresa2
 

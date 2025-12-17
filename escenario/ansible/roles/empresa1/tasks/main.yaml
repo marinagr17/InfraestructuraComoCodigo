@@ -1,0 +1,113 @@
+- name: Crear directorio easy-rsa
+  file:
+    path: "{{ easy_rsa_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Copiar easy-rsa
+  copy:
+    src: "{{ easy_rsa_bin }}"
+    dest: "{{ easy_rsa_dir }}/easyrsa"
+    mode: "0755"
+    remote_src: true
+
+#generar fihcero vars
+- name: Generar archivo de vars
+  template:
+    src: "templates/vars.j2"
+    dest: "/etc/openvpn/easy-rsa/vars"
+    owner: root
+    group: root
+    mode: "0644"
+
+# Crear PKI y certificados
+- name: Inicializar PKI
+  command: "{{ easy_rsa_bin }} init-pki"
+  args:
+    chdir: "{{ easy_rsa_dir }}"
+    creates: "{{ easy_rsa_dir }}/pki"
+
+- name: Crear CA
+  command: "{{ easy_rsa_bin }} --batch build-ca nopass"
+  args:
+    chdir: "{{ easy_rsa_dir }}"
+    creates: "{{ easy_rsa_dir }}/pki/ca.crt"
+
+- name: Crear certificados de clientes
+  command: "{{ easy_rsa_bin }} --batch build-client-full cliente1 nopass"
+  args:
+    chdir: "{{ easy_rsa_dir }}"
+    creates: "{{ easy_rsa_dir }}/pki/issued/cliente1.crt"
+
+
+- name: Crear certificado de servidor
+  command: "{{ easy_rsa_bin }} --batch build-server-full empresa2 nopass"
+  args:
+    chdir: "{{ easy_rsa_dir }}"
+    creates: "{{ easy_rsa_dir }}/pki/issued/empresa2.crt"
+
+- name: Crear dh.pem
+  command: "{{ easy_rsa_bin }} gen-dh"
+  args:
+    chdir: "{{ easy_rsa_dir }}"
+    creates: "{{ easy_rsa_dir }}/pki/dh.pem"
+
+- name: Crear ta.key
+  command: openvpn --genkey secret ta.key
+  args:
+    chdir: "{{ openvpn_dir }}"
+    creates: "{{ openvpn_dir }}/ta.key"
+
+#compartir por scp certificados
+- name: Crear directorio temporal en /home/debian para transferencia
+  ansible.builtin.file:
+    path: /home/debian/openvpn-transfer
+    state: directory
+    mode: '0755'          # No hace falta 777 aquí, solo necesita ser accesible
+    owner: debian
+    group: debian
+
+- name: Copiar certificados y claves a /home/debian con sudo (become)
+  ansible.builtin.copy:
+    src: "{{ item.src }}"
+    dest: "/home/debian/openvpn-transfer/{{ item.dest }}"
+    remote_src: true
+    mode: '0777'          # Como pediste explícitamente 777 (¡muy permisivo!)
+    owner: debian
+    group: debian
+  loop:
+    - { src: '/etc/openvpn/ta.key', dest: 'ta.key' }
+    - { src: '/etc/openvpn/easy-rsa/pki/ca.crt', dest: 'ca.crt' }
+    - { src: '/etc/openvpn/easy-rsa/pki/private/empresa2.key', dest: 'empresa2.key' }
+    - { src: '/etc/openvpn/easy-rsa/pki/issued/empresa2.crt', dest: 'empresa2.crt' }
+    - { src: '/etc/openvpn/easy-rsa/pki/dh.pem', dest: 'dh.pem' }
+    
+  become: true
+
+- name: Copiar vía SCP a empresa2 SIN sudo (como usuario debian)
+  ansible.builtin.shell: |
+    scp -o StrictHostKeyChecking=no \
+    /home/debian/openvpn-transfer/* \
+    debian@5.168.1.101:/home/debian/
+  args:
+    executable: /bin/bash
+  become: false   # ¡Importante! Sin become para usar la clave SSH del usuario debian
+
+- name: Limpiar directorio temporal en empresa1 (opcional, por seguridad)
+  ansible.builtin.file:
+    path: /home/debian/openvpn-transfer
+    state: absent
+
+#-------------------------
+#cliente1.conf
+- name: Generar archivo de configuración VPN del cliente
+  template:
+    src: "templates/cliente1.conf.j2"
+    dest: "/etc/openvpn/client/cliente1.conf"
+    owner: debian
+    group: debian
+    mode: "0600"
+  notify: 
+    - Iniciar OpenVPN

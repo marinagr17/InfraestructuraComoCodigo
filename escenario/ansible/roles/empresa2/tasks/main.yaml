@@ -1,0 +1,41 @@
+
+- name: Mover certificados y claves a /etc/openvpn/ (verdadero "move" con permisos seguros)
+  ansible.builtin.copy:
+    src: "/home/debian/{{ item }}"
+    dest: "/etc/openvpn/{{ item }}"
+    remote_src: true
+    owner: root
+    group: root
+    mode: "{{ '0600' if item.endswith('.key') else '0644' }}"
+  loop:
+    - ta.key
+    - ca.crt
+    - empresa2.key
+    - empresa2.crt
+    - dh.pem
+  become: true
+
+
+- name: Limpiar los archivos originales en /home/debian (ya movidos)
+  ansible.builtin.file:
+    path: "/home/debian/{{ item }}"
+    state: absent
+  loop:
+    - ta.key
+    - ca.crt
+    - empresa2.key
+    - empresa2.crt
+    - dh.pem
+  become: false
+
+#cliente1.conf
+- name: Generar archivo de configuración VPN del cliente
+  template:
+    src: "templates/site-to-site.conf.j2"
+    dest: "/etc/openvpn/server/site-to-site.conf"
+    owner: debian
+    group: debian
+    mode: "0600"
+  become: true  
+  notify: 
+    - Iniciar OpenVPN

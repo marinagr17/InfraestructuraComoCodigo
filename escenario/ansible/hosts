@@ -1,18 +1,14 @@
 all:
   children:
-    servidores_web:
+    empresas:
       hosts:
-        apache2:
-          ansible_host: 192.168.201.2
+        empresa1:
+          ansible_host: 192.168.200.77
           ansible_user: debian
           ansible_ssh_private_key_file: ~/.ssh/keys/marina
-          
-
-    servidores_bd:
-      hosts:
-        mariadb:
-          ansible_host: 192.168.201.3
-          ansible_user: ubuntu
+        empresa2:
+          ansible_host: 192.168.200.136
+          ansible_user: debian
           ansible_ssh_private_key_file: ~/.ssh/keys/marina
-          root_db_password: root
+
           

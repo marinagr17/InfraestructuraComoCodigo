@@ -1,0 +1,11 @@
+# handlers/main.yml
+- name: Iniciar OpenVPN
+  ansible.builtin.service:
+    name: openvpn-server@site-to-site
+    state: started
+    enabled: yes
+
+- name: Recargar configuración de red
+  ansible.builtin.service:
+    name: networking
+    state: reloaded

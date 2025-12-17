@@ -1,0 +1,78 @@
+# Archivo de configuración de Easy-RSA (vars)
+# Este archivo se guarda como "vars" dentro del directorio easy-rsa
+# con los valores de mi organización.
+
+# ==========================
+# Ubicación de Easy-RSA
+# ==========================
+# Define la ruta base donde están los archivos de Easy-RSA.
+# Por defecto se usa la ubicación del script, normalmente no hace falta cambiarlo.
+#set_var EASYRSA "${0%/*}"
+
+# ==========================
+# Comando OpenSSL
+# ==========================
+# Si openssl no está en tu PATH, define aquí la ruta completa.
+# En Linux normalmente no hace falta, en Windows se usa la ruta del binario.
+set_var EASYRSA_OPENSSL "openssl"
+
+# ====================================
+# Formato del DN (Distinguished Name)
+# ====================================
+# cn_only: solo se usa el commonName
+# org: usa los campos completos Country/Province/City/Org/Org.Unit/email/commonName
+set_var EASYRSA_DN "org"
+
+# ===============================
+# Información de la organización
+# ===============================
+# Datos que se incluirán en los certificados. 
+set_var EASYRSA_REQ_COUNTRY    "ES"			# Código de país
+set_var EASYRSA_REQ_PROVINCE   "Sevilla"		# Provincia o estado
+set_var EASYRSA_REQ_CITY       "Dos Hermanas"		# Ciudad
+set_var EASYRSA_REQ_ORG        "IES Gonzalo nazareno"	# Nombre de la organización
+set_var EASYRSA_REQ_EMAIL      "admin@vpn.com"		# Correo de contacto
+set_var EASYRSA_REQ_OU         "Informatica"		# Unidad organizativa
+
+# ==========================
+# Claves y certificados
+# ==========================
+# Tamaño de las claves RSA (2048 es suficiente, 4096 es más seguro pero más lento)
+set_var EASYRSA_KEY_SIZE 2048
+
+# Algoritmo criptográfico: rsa (clásico), ec (curvas elípticas), ed (EdDSA)
+set_var EASYRSA_ALGO "rsa"
+
+# Duración de la CA raíz en días (10 años)
+set_var EASYRSA_CA_EXPIRE 3650
+
+# Duración de los certificados de cliente/servidor en días (825 ≈ 2.25 años)
+set_var EASYRSA_CERT_EXPIRE 825
+
+# Generación de certificados sin contraseña (opcional)
+#set_var EASYRSA_NO_PASS 1
+
+# ==========================
+# Revocación y seguridad
+# ==========================
+# Días de validez de la lista de revocación de certificados
+set_var EASYRSA_CRL_DAYS 180
+
+# Generar automáticamente subjectAltName
+set_var EASYRSA_AUTO_SAN 1
+
+# Digest criptográfico para firmar los certificados
+set_var EASYRSA_DIGEST "sha256"
+
+# ==========================
+# Opciones avanzadas
+# ==========================
+# Permite ejecutar en modo batch (sin confirmaciones interactivas)
+#set_var EASYRSA_BATCH 1
+
+# Directorio para extensiones X509 (normalmente no hace falta cambiar)
+#set_var EASYRSA_EXT_DIR "$EASYRSA/x509-types"
+
+# ==========================
+# Fin de configuración
+# ==========================

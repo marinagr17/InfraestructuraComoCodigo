@@ -1,0 +1,28 @@
+tls-client                                # ← Cambiar de tls-client a client
+dev tun
+proto udp
+remote 5.168.1.101 1194
+
+nobind
+
+ca /etc/openvpn/easy-rsa/pki/ca.crt
+cert /etc/openvpn/easy-rsa/pki/issued/cliente1.crt
+key /etc/openvpn/easy-rsa/pki/private/cliente1.key
+
+tls-crypt /etc/openvpn/ta.key 1
+
+ifconfig 10.99.99.2 10.99.99.1        
+
+remote-cert-tls server
+
+route 10.60.60.0 255.255.255.0
+
+# Cifrado y autenticación
+cipher AES-256-GCM
+auth SHA256
+
+keepalive 10 120
+persist-key
+persist-tun
+
+verb 3
